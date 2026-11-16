@@ -1,0 +1,1309 @@
+ <!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS2 Merkezi: Kasa, Trade-Up, Mağaza & Ayarlar</title>
+    <style>
+        :root {
+            --bg-dark: #0f1215;
+            --bg-panel: #181c22;
+            --accent: #e5a93c;
+            --blue: #4b69ff;
+            --purple: #8847ff;
+            --pink: #d32ce6;
+            --red: #eb4b4b;
+            --gold: #ffd700;
+            --contraband: #ff8000;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        header {
+            width: 100%;
+            max-width: 1100px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--bg-panel);
+            padding: 15px 25px;
+            border-radius: 10px;
+            border-bottom: 2px solid var(--accent);
+            margin-bottom: 20px;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .stats span {
+            color: var(--accent);
+        }
+
+        .balance-box {
+            color: #4cd137 !important;
+        }
+
+        /* Uyarı Bildirim Kutusu (Banner) */
+        #alert-banner {
+            width: 100%;
+            max-width: 1100px;
+            background: rgba(235, 75, 75, 0.15);
+            border: 2px solid var(--red);
+            color: #ff6b6b;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Sekmeler */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+            max-width: 1100px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 20px;
+            background: #222831;
+            color: #aaa;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .tab-btn.active {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .tab-content {
+            display: none;
+            width: 100%;
+            max-width: 1100px;
+        }
+
+        .tab-content.active {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Kasa Seçim Paneli */
+        .case-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .case-card-btn {
+            background: var(--bg-panel);
+            border: 2px solid #2a303a;
+            border-radius: 8px;
+            padding: 10px 15px;
+            cursor: pointer;
+            text-align: center;
+            transition: 0.2s;
+            color: #fff;
+        }
+
+        .case-card-btn.selected {
+            border-color: var(--accent);
+            background: #222831;
+            box-shadow: 0 0 10px rgba(229, 169, 60, 0.3);
+        }
+
+        .case-card-btn h4 { font-size: 0.9rem; margin-bottom: 4px; }
+        .case-card-btn p { font-size: 0.8rem; color: #4cd137; }
+
+        /* Kasa İçerik Bilgi Paneli */
+        .case-contents-box {
+            width: 100%;
+            background: var(--bg-panel);
+            border: 1px solid #2a303a;
+            border-radius: 8px;
+            padding: 12px 18px;
+            margin-bottom: 20px;
+        }
+        .case-contents-box h4 { font-size: 0.9rem; color: var(--accent); margin-bottom: 8px; }
+        .case-contents-grid {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+        .content-item-preview {
+            min-width: 110px;
+            background: #121519;
+            padding: 8px;
+            border-radius: 6px;
+            text-align: center;
+            border-bottom: 4px solid #fff;
+            font-size: 0.75rem;
+        }
+
+        /* Rulet Alanı */
+        .roulette-wrapper {
+            position: relative;
+            width: 100%;
+            height: 180px;
+            background: #121519;
+            border: 3px solid #2a303a;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: inset 0 0 40px rgba(0,0,0,0.9);
+            margin-bottom: 20px;
+        }
+
+        .pointer {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 100%;
+            background: var(--accent);
+            z-index: 10;
+            box-shadow: 0 0 15px var(--accent);
+        }
+
+        .roulette-track {
+            display: flex;
+            height: 100%;
+            align-items: center;
+            will-change: transform;
+        }
+
+        .item-card {
+            min-width: 165px;
+            height: 150px;
+            margin: 0 6px;
+            background: linear-gradient(180deg, #1e232a 0%, #14171c 100%);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 10px;
+            border-bottom: 6px solid #fff;
+            position: relative;
+        }
+
+        .item-icon { font-size: 2.5rem; margin-bottom: 8px; }
+        .item-weapon { font-size: 0.8rem; color: #aaa; }
+        .item-skin { font-size: 0.9rem; font-weight: bold; margin-top: 2px; }
+
+        /* Nadirlik Renkleri */
+        .rarity-blue { border-bottom-color: var(--blue); box-shadow: inset 0 -20px 30px -20px var(--blue); }
+        .rarity-purple { border-bottom-color: var(--purple); box-shadow: inset 0 -20px 30px -20px var(--purple); }
+        .rarity-pink { border-bottom-color: var(--pink); box-shadow: inset 0 -20px 30px -20px var(--pink); }
+        .rarity-red { border-bottom-color: var(--red); box-shadow: inset 0 -20px 30px -20px var(--red); }
+        .rarity-gold { border-bottom-color: var(--gold); box-shadow: inset 0 -25px 35px -15px var(--gold); background: linear-gradient(180deg, #2d2611 0%, #14171c 100%); }
+        .rarity-contraband { border-bottom-color: var(--contraband); box-shadow: inset 0 -25px 35px -15px var(--contraband); background: linear-gradient(180deg, #331a00 0%, #14171c 100%); }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        button.action-btn {
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+        }
+
+        #open-btn { background: #28a745; color: white; box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4); }
+        #open-btn:hover:not(:disabled) { background: #218838; }
+        #open-btn:disabled { background: #444; cursor: not-allowed; }
+        
+        #sell-all-btn { background: #d9534f; color: white; }
+        #sell-all-btn:hover { background: #c9302c; }
+
+        .fast-toggle-btn {
+            background: #2a303a;
+            color: #aaa;
+            border: 2px solid #3a4350;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .fast-toggle-btn.active {
+            background: #4b69ff;
+            color: #fff;
+            border-color: #6c84ff;
+        }
+
+        /* Mağaza & Trade-Up Sekmeleri */
+        .market-container, .tradeup-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            width: 100%;
+        }
+
+        .market-card, .tradeup-panel {
+            background: var(--bg-panel);
+            border: 2px solid #2a303a;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .market-card h3, .tradeup-panel h3 { color: var(--accent); margin-bottom: 10px; }
+        .market-card p, .tradeup-panel p { font-size: 0.9rem; color: #aaa; margin-bottom: 15px; }
+
+        .buy-upgrade-btn {
+            background: #4b69ff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .buy-upgrade-btn:hover { background: #3853db; }
+        .buy-upgrade-btn:disabled { background: #444; cursor: not-allowed; }
+
+        /* Trade-Up Seçim Izgarası */
+        .tradeup-slots {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .tradeup-slot {
+            height: 70px;
+            background: #121519;
+            border: 2px dashed #3a4350;
+            border-radius: 6px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            color: #555;
+        }
+
+        .tradeup-inventory {
+            max-height: 200px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 8px;
+            background: #121519;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .tradeup-inv-item {
+            background: #181c22;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            border-bottom: 3px solid #fff;
+            text-align: center;
+        }
+        .tradeup-inv-item:hover { transform: scale(1.03); }
+
+        /* Envanter */
+        .inventory-section {
+            width: 100%;
+            background: var(--bg-panel);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .inventory-section h2 {
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            border-bottom: 1px solid #2c333d;
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 12px;
+            max-height: 350px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .inv-item {
+            background: #13161b;
+            padding: 10px;
+            border-radius: 6px;
+            text-align: center;
+            border-bottom: 4px solid #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .inv-price { margin: 6px 0; font-size: 0.85rem; color: #4cd137; font-weight: bold; }
+        .sell-btn {
+            background: #2a303a;
+            color: #fff;
+            border: none;
+            padding: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .sell-btn:hover { background: #d9534f; }
+
+        /* Araç Paneli & Viewmodel Model Önizleme */
+        .tool-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .tool-panel {
+            background: var(--bg-panel);
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .tool-panel h3 { margin-bottom: 15px; color: var(--accent); border-bottom: 1px solid #2a303a; padding-bottom: 8px; }
+
+        .control-group {
+            margin-bottom: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-group label { font-size: 0.85rem; color: #bbb; }
+        .control-group input, .control-group select {
+            background: #121519;
+            border: 1px solid #2a303a;
+            color: #fff;
+            padding: 8px;
+            border-radius: 5px;
+        }
+
+        .preview-box {
+            position: relative;
+            width: 100%;
+            height: 220px;
+            background: #0b0d10;
+            border: 2px solid #2a303a;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .vm-model-preview {
+            position: relative;
+            width: 100%;
+            height: 220px;
+            background: linear-gradient(135deg, #12161c 0%, #1c2633 100%);
+            border: 2px solid #2a303a;
+            border-radius: 8px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-end;
+            overflow: hidden;
+            margin-bottom: 15px;
+            perspective: 600px;
+        }
+
+        #weapon-model {
+            position: absolute;
+            bottom: -15px;
+            right: -10px;
+            font-size: 7.5rem;
+            transform-origin: bottom right;
+            transition: transform 0.08s ease-out;
+            filter: drop-shadow(-10px -10px 15px rgba(0,0,0,0.9));
+        }
+
+        #crosshair-preview {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .ch-line { position: absolute; background: #00ff00; }
+
+        .code-box-wrapper {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .code-output {
+            background: #121519;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #4cd137;
+            word-break: break-all;
+            border: 1px dashed #2a303a;
+        }
+
+        .copy-btn {
+            background: #2a303a;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: bold;
+            transition: 0.2s;
+            align-self: flex-end;
+        }
+        .copy-btn:hover { background: #4b69ff; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background: #1a1f26;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            border: 2px solid var(--accent);
+            max-width: 380px;
+            width: 90%;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div><h2>CS2 MERKEZİ: KASA, TRADE-UP & AYARLAR</h2></div>
+        <div class="stats">
+            <div>Bakiye: <span class="balance-box" id="user-balance">$100.00</span></div>
+            <div>Açılan Kasa: <span id="case-count">0</span></div>
+        </div>
+    </header>
+
+    <!-- Yanlış Eşya Uyarı Banneri -->
+    <div id="alert-banner">
+        <span>⚠️ HATA: Sözleşmeye yalnızca aynı nadirlik derecesine (renge) sahip eşyalar eklenebilir!</span>
+        <span onclick="hideAlert()" style="cursor:pointer; font-weight:bold; font-size:1.1rem;">&times;</span>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('case')">Kasa Açma</button>
+        <button class="tab-btn" onclick="switchTab('tradeup')">Trade-Up Sözleşmesi</button>
+        <button class="tab-btn" onclick="switchTab('market')">Mağaza (Market)</button>
+        <button class="tab-btn" onclick="switchTab('tools')">Crosshair & Viewmodel</button>
+    </div>
+
+    <!-- 1. SEKME: KASA SİMÜLATÖRÜ -->
+    <div id="tab-case" class="tab-content active">
+        <div class="case-selector" id="case-selector"></div>
+
+        <!-- Kasa İçerik ve Oran Paneli -->
+        <div class="case-contents-box" id="case-contents-box">
+            <h4>📦 Kasa İçerikleri ve Çıkma Oranları:</h4>
+            <div class="case-contents-grid" id="case-contents-grid"></div>
+        </div>
+
+        <div class="roulette-wrapper">
+            <div class="pointer"></div>
+            <div class="roulette-track" id="track"></div>
+        </div>
+
+        <div class="controls">
+            <button class="action-btn" id="open-btn" onclick="openCase()">Kasayı Aç ($<span id="current-price">2.50</span>)</button>
+            <button class="fast-toggle-btn" id="toggle-fast" onclick="toggleFastOpen()">⚡ Hızlı Aç: Kapalı</button>
+            <button class="action-btn" id="sell-all-btn" onclick="sellAllInventory()">Tümünü Sat</button>
+        </div>
+
+        <div class="inventory-section">
+            <h2>
+                <span>Envanterim (<span id="inv-count">0</span> Eşya)</span>
+                <span>Toplam Değer: <span id="inv-value" style="color:#4cd137">$0.00</span></span>
+            </h2>
+            <div class="inventory-grid" id="inventory"></div>
+        </div>
+    </div>
+
+    <!-- 2. SEKME: TRADE-UP SÖZLEŞMESİ -->
+    <div id="tab-tradeup" class="tab-content">
+        <div class="tradeup-panel" style="width:100%;">
+            <h3>Trade-Up (Sözleşme) Masası</h3>
+            <p>Aynı nadirlik derecesine (renge) sahip <strong>10 adet</strong> eşya seçerek sözleşmeyi imzala!</p>
+            
+            <div class="tradeup-slots" id="tradeup-slots">
+                <div class="tradeup-slot">1</div>
+                <div class="tradeup-slot">2</div>
+                <div class="tradeup-slot">3</div>
+                <div class="tradeup-slot">4</div>
+                <div class="tradeup-slot">5</div>
+                <div class="tradeup-slot">6</div>
+                <div class="tradeup-slot">7</div>
+                <div class="tradeup-slot">8</div>
+                <div class="tradeup-slot">9</div>
+                <div class="tradeup-slot">10</div>
+            </div>
+
+            <button class="action-btn" id="exec-tradeup-btn" style="background:var(--accent); color:#000; margin-bottom:15px; width:100%;" onclick="executeTradeUp()" disabled>Sözleşmeyi İmzala</button>
+
+            <h4 style="color:#aaa; margin-bottom:8px; text-align:left;">Sözleşmeye Eklenebilecek Eşyalar (Envanter):</h4>
+            <div class="tradeup-inventory" id="tradeup-inv">
+                <p style="color:#666; grid-column: 1/-1; text-align:center;">Envanterinizde uygun eşya yok.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. SEKME: MAĞAZA (MARKET) -->
+    <div id="tab-market" class="tab-content">
+        <div class="market-container">
+            <div class="market-card">
+                <h3>+ $100 Bakiye Ekle</h3>
+                <p>Simülatör kasalarını açmaya devam edebilmek için hesabına nakit bakiye yükle.</p>
+                <button class="buy-upgrade-btn" onclick="addBalance(100)">Satın Al ($10)</button>
+            </div>
+            <div class="market-card">
+                <h3>🍀 Şans Artırıcı (%1 Boost)</h3>
+                <p>Bıçak ve gizli eşya çıkma şansını her kademede %1 oranında dengeli şekilde artırır.</p>
+                <button class="buy-upgrade-btn" id="btn-luck-boost" onclick="buyLuckBoost()">Satın Al ($50)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. SEKME: CROSSHAIR & VIEWMODEL -->
+    <div id="tab-tools" class="tab-content">
+        <div class="tool-container">
+            <div class="tool-panel">
+                <h3>Crosshair Oluşturucu</h3>
+                <div class="preview-box">
+                    <div id="crosshair-preview">
+                        <div id="ch-top" class="ch-line"></div>
+                        <div id="ch-bottom" class="ch-line"></div>
+                        <div id="ch-left" class="ch-line"></div>
+                        <div id="ch-right" class="ch-line"></div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label>Boyut (Size): <span id="val-size">4</span></label>
+                    <input type="range" id="ch-size" min="1" max="10" value="4" oninput="updateCrosshair()">
+                </div>
+                <div class="control-group">
+                    <label>Kalınlık (Thickness): <span id="val-thickness">1</span></label>
+                    <input type="range" id="ch-thickness" min="0.5" max="4" step="0.5" value="1" oninput="updateCrosshair()">
+                </div>
+                <div class="control-group">
+                    <label>Boşluk (Gap): <span id="val-gap">-3</span></label>
+                    <input type="range" id="ch-gap" min="-10" max="10" value="-3" oninput="updateCrosshair()">
+                </div>
+                <div class="control-group">
+                    <label>Renk:</label>
+                    <select id="ch-color" onchange="updateCrosshair()">
+                        <option value="#00ff00">Yeşil</option>
+                        <option value="#00ffff">Camgöbeği (Cyan)</option>
+                        <option value="#ffff00">Sarı</option>
+                        <option value="#ff00ff">Mor</option>
+                        <option value="#ffffff">Beyaz</option>
+                    </select>
+                </div>
+                <div class="code-box-wrapper">
+                    <div class="code-output" id="ch-code">cl_crosshairsize 4; cl_crosshairthickness 1; cl_crosshairgap -3;</div>
+                    <button class="copy-btn" onclick="copyCode('ch-code')">Kopyala</button>
+                </div>
+            </div>
+
+            <div class="tool-panel">
+                <h3>Viewmodel Model Görselleştirici</h3>
+                <div class="vm-model-preview">
+                    <div id="weapon-model">︻╦╤─</div>
+                </div>
+                <div class="control-group">
+                    <label>FOV (54 ila 68): <span id="val-fov">68</span></label>
+                    <input type="range" id="vm-fov" min="54" max="68" value="68" oninput="updateViewmodel()">
+                </div>
+                <div class="control-group">
+                    <label>Offset X (Sağ/Sol): <span id="val-x">2.5</span></label>
+                    <input type="range" id="vm-x" min="-2" max="3" step="0.1" value="2.5" oninput="updateViewmodel()">
+                </div>
+                <div class="control-group">
+                    <label>Offset Y (İleri / Geri Uzama): <span id="val-y">2</span></label>
+                    <input type="range" id="vm-y" min="-2" max="4" step="0.1" value="2" oninput="updateViewmodel()">
+                </div>
+                <div class="control-group">
+                    <label>Offset Z (Aşağı/Yukarı): <span id="val-z">-1.5</span></label>
+                    <input type="range" id="vm-z" min="-3" max="2" step="0.1" value="-1.5" oninput="updateViewmodel()">
+                </div>
+                <div class="code-box-wrapper">
+                    <div class="code-output" id="vm-code">viewmodel_fov 68; viewmodel_offset_x 2.5; viewmodel_offset_y 2; viewmodel_offset_z -1.5;</div>
+                    <button class="copy-btn" onclick="copyCode('vm-code')">Kopyala</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kazanan Modal -->
+    <div class="modal" id="win-modal">
+        <div class="modal-content" id="modal-box">
+            <h3 style="color:#aaa; margin-bottom:10px;">TEBRİKLER, EŞYA ÇIKARDIN!</h3>
+            <div class="item-icon" id="m-icon" style="font-size: 4rem; margin: 10px 0;">🔫</div>
+            <div id="m-name" style="font-size: 1.3rem; font-weight: bold; margin-bottom:5px;">Silah</div>
+            <div id="m-price" style="font-size: 1.1rem; color: #4cd137; margin-bottom: 20px;">$0.00</div>
+            <button class="action-btn" style="background:var(--accent); color:#000; width:100%;" onclick="closeModal()">Envantere Ekle</button>
+        </div>
+    </div>
+
+    <script>
+        const casesData = {
+            kilowatt: {
+                name: "Kilowatt Case",
+                price: 2.50,
+                items: [
+                    { weapon: "Glock-18", skin: "Block-18", rarity: "blue", baseChance: 40, price: 0.80, icon: "🔫" },
+                    { weapon: "AK-47", skin: "Slate (Simsiyah)", rarity: "purple", baseChance: 35, price: 5.50, icon: "🔫" },
+                    { weapon: "AWP", skin: "Crakow!", rarity: "pink", baseChance: 18, price: 45.00, icon: "🎯" },
+                    { weapon: "Zeus x27", skin: "Olympus", rarity: "red", baseChance: 6, price: 85.00, icon: "⚡" },
+                    { weapon: "★ Kukri Knife", skin: "Fade", rarity: "gold", baseChance: 1.0, price: 950.00, icon: "🗡️" }
+                ]
+            },
+            dangerzone: {
+                name: "Danger Zone Case",
+                price: 2.50,
+                items: [
+                    { weapon: "MP5-SD", skin: "Lab Rats", rarity: "blue", baseChance: 45, price: 1.50, icon: "🔫" },
+                    { weapon: "Glock-18", skin: "Oxide Blaze", rarity: "blue", baseChance: 35, price: 1.80, icon: "🔫" },
+                    { weapon: "AWP", skin: "Neo-Noir", rarity: "pink", baseChance: 15, price: 2.20, icon: "🎯" },
+                    { weapon: "AK-47", skin: "Asiimov", rarity: "red", baseChance: 4.5, price: 2.50, icon: "🔥" },
+                    { weapon: "★ Ursus Knife", skin: "Marble Fade", rarity: "gold", baseChance: 0.5, price: 950.00, icon: "🗡️" }
+                ]
+            },
+            dreams: {
+                name: "Dreams & Nightmares",
+                price: 4.00,
+                items: [
+                    { weapon: "P250", skin: "Cassette", rarity: "blue", baseChance: 45, price: 1.50, icon: "🔫" },
+                    { weapon: "AK-47", skin: "Nightwish", rarity: "purple", baseChance: 33, price: 16.00, icon: "🔫" },
+                    { weapon: "USP-S", skin: "Ticket to Hell", rarity: "pink", baseChance: 17, price: 18.00, icon: "🔫" },
+                    { weapon: "AK-47", skin: "Leet Museo", rarity: "red", baseChance: 4.5, price: 65.00, icon: "🔥" },
+                    { weapon: "★ Butterfly Knife", skin: "Gamma Doppler (Emerald)", rarity: "gold", baseChance: 0.5, price: 1800.00, icon: "🗡️" }
+                ]
+            },
+            legendary: {
+                name: "Efsanevi Gizli Kasa",
+                price: 100.00,
+                items: [
+                    { weapon: "Desert Eagle", skin: "Printstream", rarity: "purple", baseChance: 55, price: 35.00, icon: "🔫" },
+                    { weapon: "AWP", skin: "Chrome Cannon", rarity: "pink", baseChance: 28, price: 75.00, icon: "🎯" },
+                    { weapon: "AK-47", skin: "Inheritance", rarity: "red", baseChance: 13.5, price: 120.00, icon: "🔥" },
+                    { weapon: "★ Karambit", skin: "Doppler (Sapphire)", rarity: "gold", baseChance: 3.0, price: 850.00, icon: "🗡️"},
+                    { weapon: "AWP", skin: "Dragon Lore", rarity: "contraband", baseChance: 0.5, price: 3500.00, icon: "🐉"}
+                ]
+            }
+        };
+
+        let currentKey = 'kilowatt';
+        let balance = 100.00;
+        let caseCount = 0;
+        let inventory = [];
+        let isSpinning = false;
+
+        let fastOpenActive = false;
+        let luckBoostCount = 0;
+        let tradeUpSelected = [];
+
+        // --- WEB AUDIO API ÖZEL SES EFEKTLERİ ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playTickSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.04);
+            gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.04);
+        }
+
+        function playWinSound(rarity) {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+            let notes = [440, 554, 659];
+            if (rarity === 'pink' || rarity === 'red') notes = [523, 659, 784, 1046];
+            if (rarity === 'gold' || rarity === 'contraband') notes = [587, 740, 880, 1174, 1480];
+
+            notes.forEach((freq, index) => {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(freq, now + index * 0.1);
+                gain.gain.setValueAtTime(0.12, now + index * 0.1);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + index * 0.1 + 0.3);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now + index * 0.1);
+                osc.stop(now + index * 0.1 + 0.3);
+            });
+        }
+
+        function playCashSound() {
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(987.77, now);
+            osc.frequency.setValueAtTime(1318.51, now + 0.08);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now);
+            osc.stop(now + 0.25);
+        }
+
+        function showAlert() {
+            const banner = document.getElementById('alert-banner');
+            banner.style.display = 'flex';
+            setTimeout(() => {
+                banner.style.display = 'none';
+            }, 4000);
+        }
+
+        function hideAlert() {
+            document.getElementById('alert-banner').style.display = 'none';
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            
+            if(tabName === 'case') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('tab-case').classList.add('active');
+            } else if(tabName === 'tradeup') {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('tab-tradeup').classList.add('active');
+                renderTradeUpInventory();
+            } else if(tabName === 'market') {
+                document.querySelectorAll('.tab-btn')[2].classList.add('active');
+                document.getElementById('tab-market').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[3].classList.add('active');
+                document.getElementById('tab-tools').classList.add('active');
+            }
+        }
+
+        function renderCaseSelectors() {
+            const container = document.getElementById('case-selector');
+            container.innerHTML = Object.keys(casesData).map(key => `
+                <div class="case-card-btn ${key === currentKey ? 'selected' : ''}" onclick="selectCase('${key}')">
+                    <h4>${casesData[key].name}</h4>
+                    <p>$${casesData[key].price.toFixed(2)}</p>
+                </div>
+            `).join('');
+            document.getElementById('current-price').textContent = casesData[currentKey].price.toFixed(2);
+            renderCaseContentsInfo();
+        }
+
+        function renderCaseContentsInfo() {
+            const grid = document.getElementById('case-contents-grid');
+            const pool = casesData[currentKey].items;
+            let totalB = pool.reduce((acc, cur) => acc + cur.baseChance, 0);
+
+            grid.innerHTML = pool.map(item => {
+                let realChance = ((item.baseChance / totalB) * 100).toFixed(1);
+                return `
+                    <div class="content-item-preview rarity-${item.rarity}">
+                        <div style="font-size:1.5rem;">${item.icon}</div>
+                        <div style="font-weight:bold; margin:2px 0;">${item.weapon}</div>
+                        <div style="color:#aaa; font-size:0.65rem;">${item.skin}</div>
+                        <div style="color:#4cd137; margin-top:2px;">~${realChance}% ($${item.price})</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectCase(key) {
+            if(isSpinning) return;
+            currentKey = key;
+            renderCaseSelectors();
+            populateInitialTrack();
+        }
+
+        const track = document.getElementById('track');
+        const openBtn = document.getElementById('open-btn');
+
+        function getRandomItem() {
+            const pool = casesData[currentKey].items;
+            let totalChance = 0;
+            const adjustedPool = pool.map(item => {
+                let chance = item.baseChance;
+                if (item.rarity === 'gold' || item.rarity === 'contraband' || item.rarity === 'red') {
+                    chance += (luckBoostCount * 1);
+                }
+                totalChance += chance;
+                return { ...item, computedChance: chance };
+            });
+
+            const rand = Math.random() * totalChance;
+            let cumulative = 0;
+            for (let item of adjustedPool) {
+                cumulative += item.computedChance;
+                if (rand <= cumulative) return item;
+            }
+            return pool[0];
+        }
+
+        function createCardHTML(item) {
+            const isGold = item.rarity === 'gold';
+            const isContraband = item.rarity === 'contraband';
+            return `
+                <div class="item-card rarity-${item.rarity}">
+                    <div class="item-icon">${isContraband ? '👑 🐉 👑' : (isGold ? '★ 🗡️ ★' : item.icon)}</div>
+                    <div class="item-weapon">${isContraband ? '★ CONTRABAND ★' : (isGold ? '★ Nadir Eşya ★' : item.weapon)}</div>
+                    <div class="item-skin">${item.skin}</div>
+                </div>
+            `;
+        }
+
+        function populateInitialTrack() {
+            let html = '';
+            for (let i = 0; i < 15; i++) {
+                html += createCardHTML(getRandomItem());
+            }
+            track.innerHTML = html;
+        }
+        renderCaseSelectors();
+        populateInitialTrack();
+
+        function toggleFastOpen() {
+            fastOpenActive = !fastOpenActive;
+            const btn = document.getElementById('toggle-fast');
+            if(fastOpenActive) {
+                btn.textContent = "⚡ Hızlı Aç: Açık";
+                btn.classList.add('active');
+            } else {
+                btn.textContent = "⚡ Hızlı Aç: Kapalı";
+                btn.classList.remove('active');
+            }
+        }
+
+        function openCase() {
+            const price = casesData[currentKey].price;
+            if (balance < price) {
+                alert("Yetersiz bakiye! Mağazadan bakiye yükleyebilir veya envanterindeki eşyaları satabilirsin.");
+                return;
+            }
+            if (isSpinning) return;
+
+            balance -= price;
+            updateStats();
+            isSpinning = true;
+            openBtn.disabled = true;
+
+            const winningItem = getRandomItem();
+
+            if (fastOpenActive) {
+                isSpinning = false;
+                openBtn.disabled = false;
+                caseCount++;
+                inventory.unshift({ ...winningItem, uniqueId: Date.now() + Math.random() });
+                updateStats();
+                renderInventory();
+                playWinSound(winningItem.rarity);
+                showWinModal(winningItem);
+                return;
+            }
+
+            const totalCards = 70;
+            const winIndex = 58;
+
+            let cardsHTML = '';
+            for (let i = 0; i < totalCards; i++) {
+                const item = (i === winIndex) ? winningItem : getRandomItem();
+                cardsHTML += createCardHTML(item);
+            }
+
+            track.style.transition = 'none';
+            track.style.transform = 'translateX(0px)';
+            track.innerHTML = cardsHTML;
+
+            const cardWidth = 177;
+            const wrapperWidth = document.querySelector('.roulette-wrapper').offsetWidth;
+            const randomOffset = Math.floor(Math.random() * 100) - 50;
+            const targetX = (winIndex * cardWidth) - (wrapperWidth / 2) + (cardWidth / 2) + randomOffset;
+
+            let lastCardPassed = 0;
+            const startTime = performance.now();
+            const duration = 6500;
+
+            function trackSound(now) {
+                const elapsed = now - startTime;
+                if (elapsed < duration && isSpinning) {
+                    const style = window.getComputedStyle(track);
+                    const matrix = new WebKitCSSMatrix(style.transform);
+                    const currentX = Math.abs(matrix.m41);
+                    const currentCard = Math.floor(currentX / cardWidth);
+                    if (currentCard > lastCardPassed) {
+                        playTickSound();
+                        lastCardPassed = currentCard;
+                    }
+                    requestAnimationFrame(trackSound);
+                }
+            }
+
+            setTimeout(() => {
+                track.style.transition = `transform ${duration}ms cubic-bezier(0.08, 0.82, 0.12, 1)`;
+                track.style.transform = `translateX(-${targetX}px)`;
+                requestAnimationFrame(trackSound);
+            }, 50);
+
+            setTimeout(() => {
+                isSpinning = false;
+                openBtn.disabled = false;
+                caseCount++;
+                inventory.unshift({ ...winningItem, uniqueId: Date.now() + Math.random() });
+                updateStats();
+                renderInventory();
+                playWinSound(winningItem.rarity);
+                showWinModal(winningItem);
+            }, duration + 150);
+        }
+
+        // --- TRADE-UP SÖZLEŞME MANTIĞI & UYARI BANNERİ ---
+        function renderTradeUpInventory() {
+            const container = document.getElementById('tradeup-inv');
+            const validItems = inventory.filter(i => i.rarity !== 'gold' && i.rarity !== 'contraband');
+
+            if (validItems.length === 0) {
+                container.innerHTML = `<p style="color:#666; grid-column: 1/-1; text-align:center;">Envanterinizde uygun eşya yok.</p>`;
+                return;
+            }
+
+            container.innerHTML = validItems.map(item => `
+                <div class="tradeup-inv-item rarity-${item.rarity}" onclick="addToTradeUp(${item.uniqueId})">
+                    <div style="font-size:1.2rem;">${item.icon}</div>
+                    <div style="font-weight:bold;">${item.weapon}</div>
+                    <div style="color:#aaa; font-size:0.7rem;">${item.skin}</div>
+                </div>
+            `).join('');
+
+            renderTradeUpSlots();
+        }
+
+        function addToTradeUp(uniqueId) {
+            if (tradeUpSelected.length >= 10) return;
+            const item = inventory.find(i => i.uniqueId === uniqueId);
+            if (!item) return;
+
+            // Farklı renkte eşya seçildiğinde üst kısımda uyarı banneri göster
+            if (tradeUpSelected.length > 0 && tradeUpSelected[0].rarity !== item.rarity) {
+                showAlert();
+                return;
+            }
+
+            inventory = inventory.filter(i => i.uniqueId !== uniqueId);
+            tradeUpSelected.push(item);
+            renderTradeUpInventory();
+            renderInventory();
+        }
+
+        function renderTradeUpSlots() {
+            const slotsContainer = document.getElementById('tradeup-slots');
+            let html = '';
+            for (let i = 0; i < 10; i++) {
+                if (tradeUpSelected[i]) {
+                    const item = tradeUpSelected[i];
+                    html += `
+                        <div class="tradeup-slot rarity-${item.rarity}" onclick="removeFromTradeUp(${i})" title="Çıkarmak için tıkla" style="cursor:pointer; font-size:1.2rem; flex-direction:column;">
+                            <div>${item.icon}</div>
+                            <div style="font-size:0.5rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:90%;">${item.skin}</div>
+                        </div>
+                    `;
+                } else {
+                    html += `<div class="tradeup-slot">${i + 1}</div>`;
+                }
+            }
+            slotsContainer.innerHTML = html;
+
+            const execBtn = document.getElementById('exec-tradeup-btn');
+            if (tradeUpSelected.length === 10) {
+                execBtn.disabled = false;
+                execBtn.style.opacity = "1";
+            } else {
+                execBtn.disabled = true;
+                execBtn.style.opacity = "0.5";
+            }
+        }
+
+        function removeFromTradeUp(index) {
+            const removed = tradeUpSelected.splice(index, 1)[0];
+            inventory.push(removed);
+            renderTradeUpInventory();
+            renderInventory();
+        }
+
+        function executeTradeUp() {
+            if (tradeUpSelected.length !== 10) return;
+
+            const rarityRanks = { blue: 'purple', purple: 'pink', pink: 'red', red: 'gold' };
+            const currentRarity = tradeUpSelected[0].rarity;
+            const targetRarity = rarityRanks[currentRarity] || 'gold';
+
+            let possibleItems = [];
+            Object.values(casesData).forEach(c => {
+                c.items.forEach(it => {
+                    if (it.rarity === targetRarity && !possibleItems.some(p => p.skin === it.skin)) {
+                        possibleItems.push(it);
+                    }
+                });
+            });
+
+            if (possibleItems.length === 0) {
+                possibleItems = [{ weapon: "Özel Silah", skin: "Trade-Up Ödülü", rarity: targetRarity, price: 150.00, icon: "🎁" }];
+            }
+
+            const reward = possibleItems[Math.floor(Math.random() * possibleItems.length)];
+            const newItem = { ...reward, uniqueId: Date.now() + Math.random() };
+
+            tradeUpSelected = [];
+            renderTradeUpInventory();
+            renderInventory();
+            updateStats();
+
+            playWinSound(newItem.rarity);
+            showWinModal(newItem);
+        }
+
+        function addBalance(amount) {
+            balance += amount;
+            updateStats();
+            playCashSound();
+            alert(`Hesabınıza $${amount} bakiye eklendi!`);
+        }
+
+        function buyLuckBoost() {
+            const cost = 50 * (luckBoostCount + 1);
+            if (balance < cost) {
+                alert(`Yetersiz bakiye ($${cost} gerekli)!`);
+                return;
+            }
+            balance -= cost;
+            luckBoostCount++;
+            document.getElementById('btn-luck-boost').textContent = `Satın Al ($${50 * (luckBoostCount + 1)})`;
+            updateStats();
+            alert(`Şans artırıldı! Toplam Boost: +%${luckBoostCount}`);
+        }
+
+        function showWinModal(item) {
+            const modal = document.getElementById('win-modal');
+            const box = document.getElementById('modal-box');
+            document.getElementById('m-icon').textContent = item.icon;
+            document.getElementById('m-name').textContent = `${item.weapon} | ${item.skin}`;
+            document.getElementById('m-price').textContent = `$${item.price.toFixed(2)}`;
+            
+            const colors = { blue: '#4b69ff', purple: '#8847ff', pink: '#d32ce6', red: '#eb4b4b', gold: '#ffd700', contraband: '#ff8000' };
+            box.style.borderColor = colors[item.rarity];
+            document.getElementById('m-name').style.color = colors[item.rarity];
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('win-modal').style.display = 'none';
+        }
+
+        function renderInventory() {
+            const invGrid = document.getElementById('inventory');
+            document.getElementById('inv-count').textContent = inventory.length;
+            let totalInvValue = inventory.reduce((sum, item) => sum + item.price, 0);
+            document.getElementById('inv-value').textContent = `$${totalInvValue.toFixed(2)}`;
+
+            invGrid.innerHTML = inventory.map(item => `
+                <div class="inv-item rarity-${item.rarity}">
+                    <div>
+                        <div style="font-size: 1.8rem;">${item.icon}</div>
+                        <div style="font-size: 0.7rem; color: #aaa; margin-top:3px;">${item.weapon}</div>
+                        <div style="font-size: 0.8rem; font-weight: bold;">${item.skin}</div>
+                    </div>
+                    <div>
+                        <div class="inv-price">$${item.price.toFixed(2)}</div>
+                        <button class="sell-btn" onclick="sellItem(${item.uniqueId})">Sat</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function sellItem(uniqueId) {
+            const index = inventory.findIndex(i => i.uniqueId === uniqueId);
+            if (index !== -1) {
+                balance += inventory[index].price;
+                inventory.splice(index, 1);
+                updateStats();
+                renderInventory();
+                playCashSound();
+            }
+        }
+
+        function sellAllInventory() {
+            if(inventory.length === 0) return;
+            let total = inventory.reduce((sum, i) => sum + i.price, 0);
+            balance += total;
+            inventory = [];
+            updateStats();
+            renderInventory();
+            playCashSound();
+        }
+
+        function updateStats() {
+            document.getElementById('user-balance').textContent = `$${balance.toFixed(2)}`;
+            document.getElementById('case-count').textContent = caseCount;
+        }
+
+        function copyCode(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Kod başarıyla kopyalandı!");
+            }).catch(err => {
+                console.error('Kopyalama başarısız:', err);
+            });
+        }
+
+        function updateCrosshair() {
+            const size = document.getElementById('ch-size').value;
+            const thickness = document.getElementById('ch-thickness').value;
+            const gap = parseFloat(document.getElementById('ch-gap').value);
+            const color = document.getElementById('ch-color').value;
+
+            document.getElementById('val-size').textContent = size;
+            document.getElementById('val-thickness').textContent = thickness;
+            document.getElementById('val-gap').textContent = gap;
+
+            const top = document.getElementById('ch-top');
+            const bottom = document.getElementById('ch-bottom');
+            const left = document.getElementById('ch-left');
+            const right = document.getElementById('ch-right');
+
+            [top, bottom, left, right].forEach(el => el.style.background = color);
+
+            top.style.width = `${thickness}px`;
+            top.style.height = `${size}px`;
+            top.style.top = `${10 - size - gap}px`;
+            top.style.left = `${10 - thickness/2}px`;
+
+            bottom.style.width = `${thickness}px`;
+            bottom.style.height = `${size}px`;
+            bottom.style.top = `${10 + gap}px`;
+            bottom.style.left = `${10 - thickness/2}px`;
+
+            left.style.width = `${size}px`;
+            left.style.height = `${thickness}px`;
+            left.style.left = `${10 - size - gap}px`;
+            left.style.top = `${10 - thickness/2}px`;
+
+            right.style.width = `${size}px`;
+            right.style.height = `${thickness}px`;
+            right.style.left = `${10 + gap}px`;
+            right.style.top = `${10 - thickness/2}px`;
+
+            document.getElementById('ch-code').textContent = `cl_crosshairsize ${size}; cl_crosshairthickness ${thickness}; cl_crosshairgap ${gap}; cl_crosshaircolor_r 0; cl_crosshaircolor_g 255; cl_crosshaircolor_b 0;`;
+        }
+
+        function updateViewmodel() {
+            const fov = document.getElementById('vm-fov').value;
+            const x = document.getElementById('vm-x').value;
+            const y = document.getElementById('vm-y').value;
+            const z = document.getElementById('vm-z').value;
+
+            document.getElementById('val-fov').textContent = fov;
+            document.getElementById('val-x').textContent = x;
+            document.getElementById('val-y').textContent = y;
+            document.getElementById('val-z').textContent = z;
+
+            const model = document.getElementById('weapon-model');
+            const scale = fov / 55;
+            const posX = (x - 2.5) * 25;
+            const posY = (y - 2) * -35; 
+            const posZ = (z - (-1.5)) * -25;
+            
+            model.style.transform = `translate(${posX + posZ}px, ${posY}px) scale(${scale}) rotate(-15deg)`;
+
+            document.getElementById('vm-code').textContent = `viewmodel_fov ${fov}; viewmodel_offset_x ${x}; viewmodel_offset_y ${y}; viewmodel_offset_z ${z};`;
+        }
+
+        updateCrosshair();
+        updateViewmodel();
+    </script>
+</body>
+</html>
